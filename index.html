@@ -150,7 +150,7 @@
       const ctx = canvas.getContext('2d', { alpha: false });
       const replay = document.getElementById('replay');
       const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const colors = ['#ffd77d', '#ff8e87', '#8de0d1', '#d7a9f9', '#fff3ca'];
+      const colors = ['#ff477e', '#ffbd45', '#5bdcff', '#b976ff', '#6bf2c9', '#fff3d2'];
       const rockets = [];
       const sparks = [];
       let stars = [];
@@ -158,7 +158,7 @@
       let width = 0;
       let height = 0;
       let nextLaunch = 0;
-      let showUntil = reducedMotion ? 0 : performance.now() + 7500;
+      let showUntil = reducedMotion ? 0 : performance.now() + 10000;
       let previousFrame = performance.now();
 
       function resize() {
@@ -180,7 +180,7 @@
         }
       }
 
-      function launch(targetX = width * (.15 + Math.random() * .7), targetY = height * (.11 + Math.random() * .36)) {
+      function launch(targetX = width * (.12 + Math.random() * .76), targetY = height * (.14 + Math.random() * .38)) {
         const startX = targetX + (Math.random() - .5) * width * .42;
         const frames = 33 + Math.random() * 16;
         rockets.push({
@@ -191,19 +191,25 @@
       }
 
       function explode(x, y, color) {
-        const count = width < 500 ? 84 : 110;
+        const count = width < 500 ? 150 : 200;
+        const scale = Math.max(.85, Math.min(1.35, Math.min(width, height) / 480));
+        const heart = Math.random() < .28;
         for (let i = 0; i < count; i++) {
-          const angle = i / count * Math.PI * 2 + (Math.random() - .5) * .09;
-          const speed = (1.5 + Math.random() * 3.2) * (i % 5 === 0 ? 1.2 : 1);
-          const life = 48 + Math.random() * 34;
+          const angle = i / count * Math.PI * 2 + (Math.random() - .5) * .035;
+          const speed = (1.8 + Math.random() * 6.4) * scale * (i % 7 === 0 ? 1.12 : 1);
+          const hx = Math.sin(angle) ** 3;
+          const hy = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle)
+            - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) / 17;
+          const life = 72 + Math.random() * 30;
           sparks.push({
-            x, y, px: x, py: y,
-            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-            life, maxLife: life, color: i % 7 === 0 ? '#fff9df' : color,
-            radius: i % 6 === 0 ? 2.7 : 1.9
+            x, y, trail: [{ x, y }],
+            vx: (heart ? hx : Math.cos(angle)) * speed,
+            vy: (heart ? hy : Math.sin(angle)) * speed,
+            life, maxLife: life, color: i % 9 === 0 ? '#fff9df' : color,
+            radius: i % 8 === 0 ? 2.6 : 1.65
           });
         }
-        if (sparks.length > 650) sparks.splice(0, sparks.length - 650);
+        if (sparks.length > 900) sparks.splice(0, sparks.length - 900);
       }
 
       function paintBackground(now) {
@@ -242,10 +248,10 @@
         if (!document.hidden && now >= nextLaunch) {
           if (now < showUntil) {
             launch();
-            nextLaunch = now + 350 + Math.random() * 220;
+            nextLaunch = now + 260 + Math.random() * 220;
           } else if (!reducedMotion) {
             launch();
-            nextLaunch = now + 1700 + Math.random() * 850;
+            nextLaunch = now + 650 + Math.random() * 350;
           }
         }
         for (let i = rockets.length - 1; i >= 0; i--) {
@@ -264,17 +270,21 @@
         }
         for (let i = sparks.length - 1; i >= 0; i--) {
           const p = sparks[i];
-          p.px = p.x; p.py = p.y;
           p.x += p.vx * step; p.y += p.vy * step;
-          p.vx *= Math.pow(.982, step); p.vy = p.vy * Math.pow(.982, step) + .045 * step;
+          p.vx *= Math.pow(.988, step); p.vy = p.vy * Math.pow(.988, step) + .045 * step;
+          p.trail.push({ x: p.x, y: p.y });
+          if (p.trail.length > 11) p.trail.shift();
           p.life -= step;
           if (p.life <= 0) { sparks.splice(i, 1); continue; }
-          ctx.globalAlpha = Math.min(1, p.life / Math.min(20, p.maxLife));
+          ctx.globalAlpha = Math.min(1, p.life / 30);
           ctx.strokeStyle = p.color;
           ctx.lineWidth = p.radius;
-          ctx.shadowBlur = 19;
+          ctx.shadowBlur = 13;
           ctx.shadowColor = p.color;
-          ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(p.trail[0].x, p.trail[0].y);
+          for (let j = 1; j < p.trail.length; j++) ctx.lineTo(p.trail[j].x, p.trail[j].y);
+          ctx.stroke();
         }
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
@@ -282,7 +292,7 @@
       }
 
       replay.addEventListener('click', () => {
-        showUntil = performance.now() + 7000;
+        showUntil = performance.now() + 10000;
         nextLaunch = 0;
         explode(width * .36, height * .24, colors[Math.floor(Math.random() * colors.length)]);
         explode(width * .67, height * .3, colors[Math.floor(Math.random() * colors.length)]);
