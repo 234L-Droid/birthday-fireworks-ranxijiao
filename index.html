@@ -104,12 +104,46 @@
     button:active { transform: translateY(1px); }
     button:focus-visible { outline: 2px solid #fff0c8; outline-offset: 4px; }
     .signature { color: rgba(243, 226, 194, .68); font-size: 12px; }
+    .tip-layer { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+    .tip-card {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      width: 300px;
+      height: 150px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, .85);
+      border-radius: 16px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, .35);
+      text-align: center;
+      pointer-events: auto;
+      animation: tip-enter .3s ease-out both;
+    }
+    .tip-card p { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.5; }
+    .tip-card button {
+      min-width: 72px;
+      min-height: 32px;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: #ffd76b;
+      color: #42331c;
+      font-size: 13px;
+      box-shadow: none;
+    }
+    .tip-card button:hover { background: #ffca49; }
+    @keyframes tip-enter { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: scale(1); } }
     @media (max-width: 600px) {
       .page { padding-right: 18px; padding-left: 18px; }
       main { padding-bottom: min(14vh, 96px); }
       .name { font-size: 28px; }
       .birthday { font-size: 50px; }
       .wish { font-size: 14px; }
+      .tip-card { width: 228px; height: 132px; padding: 12px; gap: 8px; }
+      .tip-card p { font-size: 15px; }
     }
     @media (max-width: 360px) {
       .birthday { font-size: 44px; }
@@ -126,6 +160,7 @@
 <body>
   <canvas id="sky" aria-hidden="true"></canvas>
   <div class="vignette" aria-hidden="true"></div>
+  <div id="tip-layer" class="tip-layer" aria-label="生日祝福卡片"></div>
   <div class="page">
     <div class="topline">HAPPY BIRTHDAY</div>
     <main>
@@ -135,6 +170,7 @@
     </main>
     <div class="actions">
       <button id="replay" type="button">再放一场烟花</button>
+      <button id="toggle-tips" type="button" aria-pressed="true">暂停祝福弹窗</button>
       <div class="signature">今夜的星光，都为你而亮</div>
     </div>
   </div>
@@ -149,7 +185,66 @@
       const canvas = document.getElementById('sky');
       const ctx = canvas.getContext('2d', { alpha: false });
       const replay = document.getElementById('replay');
+      const tipLayer = document.getElementById('tip-layer');
+      const toggleTips = document.getElementById('toggle-tips');
       const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const tips = [
+        `${name}，生日快乐！`,
+        '祝你身体健康，笑口常开！',
+        '愿你岁岁有今朝，年年都精彩！',
+        '生日快乐呀，每天都要开开心心！',
+        '愿美好常伴你左右，生日快乐！',
+        '祝你生日愉悦，万事顺遂！',
+        `${name}，愿你青春常在，快乐常伴！`,
+        `${name}，生日快乐！身体健康，万事如意！`,
+        '愿你每天都开开心心，笑容常在！',
+        '希望你每天都像今天一样幸福！',
+        `${name}，愿你健康平安，心想事成！`,
+        `${name}，愿所有美好都围绕着你～`,
+        '祝你年年有今日，岁岁有今朝！',
+        `愿${name}的生活像花儿一样灿烂！`,
+        `${name}，生日快乐，万事顺意！`,
+        `${name}，每天都要笑得这么甜哦～`,
+        '愿你眼里有光，心中有爱！',
+        '今天的烟花，只为你绽放！'
+      ];
+      const bgColors = ['#FFCCD5', '#C5E3ED', '#D4F1F4', '#E9E4F0', '#FFF8E6', '#FFE8D6', '#F1ECC3', '#D6EFD8', '#FFE6E6', '#E8F4F8', '#FFF0F3', '#F5F3FF', '#FFF5E6', '#E6F7F0', '#FFEAEA', '#F0F7FF'];
+      const fontColors = ['#D81F26', '#00529B', '#137333', '#5C2D91', '#C8553D', '#9C4510', '#4A5568'];
+      const pick = items => items[Math.floor(Math.random() * items.length)];
+      let tipsPlaying = true;
+
+      function showWarmTip() {
+        if (!tipsPlaying || document.hidden) return;
+        const limit = innerWidth < 600 ? 4 : 8;
+        if (tipLayer.children.length >= limit) tipLayer.firstElementChild.remove();
+        const card = document.createElement('div');
+        card.className = 'tip-card';
+        card.style.backgroundColor = pick(bgColors);
+        card.style.color = pick(fontColors);
+        const message = document.createElement('p');
+        message.textContent = pick(tips);
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.textContent = '谢谢';
+        close.setAttribute('aria-label', `关闭祝福：${message.textContent}`);
+        close.addEventListener('click', () => card.remove());
+        card.append(message, close);
+        tipLayer.append(card);
+        const maxX = Math.max(8, innerWidth - card.offsetWidth - 8);
+        const maxY = Math.max(58, innerHeight - card.offsetHeight - 12);
+        card.style.left = `${8 + Math.random() * (maxX - 8)}px`;
+        card.style.top = `${58 + Math.random() * (maxY - 58)}px`;
+        setTimeout(() => card.remove(), 7000);
+      }
+      for (const delay of [450, 1050, 1650]) setTimeout(showWarmTip, delay);
+      setInterval(showWarmTip, 1100);
+      toggleTips.addEventListener('click', () => {
+        tipsPlaying = !tipsPlaying;
+        toggleTips.textContent = tipsPlaying ? '暂停祝福弹窗' : '继续祝福弹窗';
+        toggleTips.setAttribute('aria-pressed', String(tipsPlaying));
+        if (!tipsPlaying) tipLayer.replaceChildren();
+        else showWarmTip();
+      });
       const colors = ['#ff477e', '#ffbd45', '#5bdcff', '#b976ff', '#6bf2c9', '#fff3d2'];
       const rockets = [];
       const sparks = [];
@@ -299,7 +394,7 @@
         for (let i = 0; i < 3; i++) setTimeout(() => launch(), i * 180);
       });
       window.addEventListener('pointerdown', event => {
-        if (event.target === replay) return;
+        if (event.target.closest('button, .tip-card')) return;
         launch(Math.max(20, Math.min(width - 20, event.clientX)),
                Math.max(height * .08, Math.min(height * .7, event.clientY)));
       }, { passive: true });
