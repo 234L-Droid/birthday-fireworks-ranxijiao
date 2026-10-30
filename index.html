@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#080f1c">
-  <meta name="description" content="送给冉洗脚的生日烟花。愿新的一岁，心愿都能被点亮。">
+  <meta name="description" content="送给冉稀娇的生日烟花。愿新的一岁，心愿都能被点亮。">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="冉洗脚，生日快乐！">
+  <meta property="og:title" content="冉稀娇，生日快乐！">
   <meta property="og:description" content="有一场烟花，专为你绽放。">
-  <title>冉洗脚，生日快乐！</title>
+  <title>冉稀娇，生日快乐！</title>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -17,7 +17,7 @@
       overflow: hidden;
       background: #080f1c;
       color: #fff8eb;
-      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      font-family: "华文琥珀", "STHupo", "PingFang SC", "Microsoft YaHei", sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
     #sky, .vignette { position: fixed; inset: 0; width: 100%; height: 100%; }
@@ -44,7 +44,7 @@
       justify-content: center;
       gap: 13px;
       color: #f5d797;
-      font-family: Georgia, serif;
+      font-family: "华文琥珀", "STHupo", Georgia, serif;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0;
@@ -94,7 +94,7 @@
       border-radius: 8px;
       background: rgba(10, 23, 35, .76);
       color: #ffe7b7;
-      font: 600 15px "PingFang SC", "Microsoft YaHei", sans-serif;
+      font: 600 15px "华文琥珀", "STHupo", "PingFang SC", sans-serif;
       cursor: pointer;
       pointer-events: auto;
       box-shadow: 0 8px 30px rgba(0, 0, 0, .22), inset 0 0 18px rgba(247, 194, 99, .08);
@@ -165,7 +165,7 @@
     <div class="topline">HAPPY BIRTHDAY</div>
     <main>
       <div class="small-star" aria-hidden="true">✦</div>
-      <h1><span class="name" id="name">冉洗脚</span><span class="birthday">生日快乐</span></h1>
+      <h1><span class="name" id="name">冉稀娇</span><span class="birthday">生日快乐</span></h1>
       <p class="wish" id="wish">愿新的一岁，心里有光，脚下有路，<br>每一个愿望都能灿烂绽放。</p>
     </main>
     <div class="actions">
@@ -177,7 +177,7 @@
   <script>
     (() => {
       const params = new URLSearchParams(location.search);
-      const name = (params.get('name') || '冉洗脚').trim().slice(0, 16);
+      const name = (params.get('name') || '冉稀娇').trim().slice(0, 16);
       if (name) {
         document.getElementById('name').textContent = name;
         document.title = `${name}，生日快乐！`;
@@ -215,7 +215,7 @@
 
       function showWarmTip() {
         if (!tipsPlaying || document.hidden) return;
-        const limit = innerWidth < 600 ? 4 : 8;
+        const limit = innerWidth < 600 ? 3 : 6;
         if (tipLayer.children.length >= limit) tipLayer.firstElementChild.remove();
         const card = document.createElement('div');
         card.className = 'tip-card';
@@ -236,8 +236,8 @@
         card.style.top = `${58 + Math.random() * (maxY - 58)}px`;
         setTimeout(() => card.remove(), 7000);
       }
-      for (const delay of [450, 1050, 1650]) setTimeout(showWarmTip, delay);
-      setInterval(showWarmTip, 1100);
+      for (const delay of [450, 1750]) setTimeout(showWarmTip, delay);
+      setInterval(showWarmTip, 2000);
       toggleTips.addEventListener('click', () => {
         tipsPlaying = !tipsPlaying;
         toggleTips.textContent = tipsPlaying ? '暂停祝福弹窗' : '继续祝福弹窗';
@@ -257,9 +257,9 @@
       let previousFrame = performance.now();
 
       function resize() {
-        const ratio = Math.min(devicePixelRatio || 1, 2);
         width = window.innerWidth;
         height = window.innerHeight;
+        const ratio = Math.min(devicePixelRatio || 1, width < 600 ? 1.25 : 2);
         canvas.width = Math.round(width * ratio);
         canvas.height = Math.round(height * ratio);
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -286,7 +286,7 @@
       }
 
       function explode(x, y, color) {
-        const count = width < 500 ? 150 : 200;
+        const count = width < 500 ? 72 : 120;
         const scale = Math.max(.85, Math.min(1.35, Math.min(width, height) / 480));
         const heart = Math.random() < .28;
         for (let i = 0; i < count; i++) {
@@ -304,7 +304,8 @@
             radius: i % 8 === 0 ? 2.6 : 1.65
           });
         }
-        if (sparks.length > 900) sparks.splice(0, sparks.length - 900);
+        const maxSparks = width < 600 ? 360 : 650;
+        if (sparks.length > maxSparks) sparks.splice(0, sparks.length - maxSparks);
       }
 
       function paintBackground(now) {
@@ -337,16 +338,25 @@
       }
 
       function frame(now) {
+        if (document.hidden) {
+          previousFrame = now;
+          requestAnimationFrame(frame);
+          return;
+        }
+        if (width < 600 && now - previousFrame < 32) {
+          requestAnimationFrame(frame);
+          return;
+        }
         const step = Math.min(2, Math.max(.5, (now - previousFrame) / 16.67));
         previousFrame = now;
         paintBackground(now);
         if (!document.hidden && now >= nextLaunch) {
           if (now < showUntil) {
             launch();
-            nextLaunch = now + 260 + Math.random() * 220;
+            nextLaunch = now + 480 + Math.random() * 260;
           } else if (!reducedMotion) {
             launch();
-            nextLaunch = now + 650 + Math.random() * 350;
+            nextLaunch = now + 1200 + Math.random() * 500;
           }
         }
         for (let i = rockets.length - 1; i >= 0; i--) {
@@ -355,7 +365,7 @@
           r.x += r.vx * step; r.y += r.vy * step;
           ctx.strokeStyle = r.color;
           ctx.lineWidth = 2.3;
-          ctx.shadowBlur = 15;
+          ctx.shadowBlur = width < 600 ? 0 : 8;
           ctx.shadowColor = r.color;
           ctx.beginPath(); ctx.moveTo(r.px, r.py + 9); ctx.lineTo(r.x, r.y); ctx.stroke();
           if (r.y <= r.ty) {
@@ -368,13 +378,13 @@
           p.x += p.vx * step; p.y += p.vy * step;
           p.vx *= Math.pow(.988, step); p.vy = p.vy * Math.pow(.988, step) + .045 * step;
           p.trail.push({ x: p.x, y: p.y });
-          if (p.trail.length > 11) p.trail.shift();
+          if (p.trail.length > (width < 600 ? 5 : 8)) p.trail.shift();
           p.life -= step;
           if (p.life <= 0) { sparks.splice(i, 1); continue; }
           ctx.globalAlpha = Math.min(1, p.life / 30);
           ctx.strokeStyle = p.color;
           ctx.lineWidth = p.radius;
-          ctx.shadowBlur = 13;
+          ctx.shadowBlur = 0;
           ctx.shadowColor = p.color;
           ctx.beginPath();
           ctx.moveTo(p.trail[0].x, p.trail[0].y);
