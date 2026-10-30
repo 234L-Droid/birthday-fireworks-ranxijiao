@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080f1c">
+  <meta name="description" content="送给冉洗脚的生日烟花。愿新的一岁，心愿都能被点亮。">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="冉洗脚，生日快乐！">
+  <meta property="og:description" content="有一场烟花，专为你绽放。">
+  <title>冉洗脚，生日快乐！</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background: #080f1c;
+      color: #fff8eb;
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #sky, .vignette { position: fixed; inset: 0; width: 100%; height: 100%; }
+    #sky { display: block; }
+    .vignette {
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(4, 10, 20, .12), transparent 38%, rgba(4, 10, 20, .22) 65%, rgba(4, 10, 20, .72));
+    }
+    .page {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: calc(27px + env(safe-area-inset-top)) 22px calc(31px + env(safe-area-inset-bottom));
+      text-align: center;
+      pointer-events: none;
+    }
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      color: #f5d797;
+      font-family: Georgia, serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .topline::before, .topline::after {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: rgba(245, 215, 151, .58);
+    }
+    main {
+      align-self: end;
+      width: 100%;
+      padding-bottom: min(15vh, 118px);
+      text-shadow: 0 3px 28px rgba(1, 7, 17, .95);
+    }
+    .small-star { color: #f7d994; font-size: 20px; line-height: 1; }
+    h1 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 11px;
+      margin: 21px 0 19px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+    .name { color: #fff8eb; font-size: 34px; line-height: 1.25; }
+    .birthday {
+      color: #ffe7aa;
+      font-size: 62px;
+      line-height: 1.15;
+      text-shadow: 0 0 26px rgba(254, 183, 87, .35), 0 3px 28px rgba(1, 7, 17, .95);
+    }
+    .wish {
+      max-width: 26em;
+      margin: 0 auto;
+      color: #f1e5d8;
+      font-size: 15px;
+      line-height: 1.9;
+    }
+    .actions { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    button {
+      min-width: 172px;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid rgba(255, 222, 157, .8);
+      border-radius: 8px;
+      background: rgba(10, 23, 35, .76);
+      color: #ffe7b7;
+      font: 600 15px "PingFang SC", "Microsoft YaHei", sans-serif;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .22), inset 0 0 18px rgba(247, 194, 99, .08);
+      transition: background .2s, transform .2s;
+    }
+    button:hover { background: rgba(43, 49, 52, .9); transform: translateY(-2px); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 2px solid #fff0c8; outline-offset: 4px; }
+    .signature { color: rgba(243, 226, 194, .68); font-size: 12px; }
+    @media (max-width: 600px) {
+      .page { padding-right: 18px; padding-left: 18px; }
+      main { padding-bottom: min(14vh, 96px); }
+      .name { font-size: 28px; }
+      .birthday { font-size: 50px; }
+      .wish { font-size: 14px; }
+    }
+    @media (max-width: 360px) {
+      .birthday { font-size: 44px; }
+      .name { font-size: 25px; }
+    }
+    @media (max-height: 680px) {
+      main { padding-bottom: 42px; }
+      h1 { margin: 13px 0; }
+      .birthday { font-size: 44px; }
+      .wish { line-height: 1.6; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="page">
+    <div class="topline">HAPPY BIRTHDAY</div>
+    <main>
+      <div class="small-star" aria-hidden="true">✦</div>
+      <h1><span class="name" id="name">冉洗脚</span><span class="birthday">生日快乐</span></h1>
+      <p class="wish" id="wish">愿新的一岁，心里有光，脚下有路，<br>每一个愿望都能灿烂绽放。</p>
+    </main>
+    <div class="actions">
+      <button id="replay" type="button">再放一场烟花</button>
+      <div class="signature">今夜的星光，都为你而亮</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const name = (params.get('name') || '冉洗脚').trim().slice(0, 16);
+      if (name) {
+        document.getElementById('name').textContent = name;
+        document.title = `${name}，生日快乐！`;
+      }
+      const canvas = document.getElementById('sky');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const replay = document.getElementById('replay');
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const colors = ['#ffd77d', '#ff8e87', '#8de0d1', '#d7a9f9', '#fff3ca'];
+      const rockets = [];
+      const sparks = [];
+      let stars = [];
+      let buildings = [];
+      let width = 0;
+      let height = 0;
+      let nextLaunch = 0;
+      let showUntil = reducedMotion ? 0 : performance.now() + 7500;
+      let previousFrame = performance.now();
+
+      function resize() {
+        const ratio = Math.min(devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        stars = Array.from({ length: Math.min(115, Math.floor(width * height / 4400)) }, () => ({
+          x: Math.random() * width, y: Math.random() * height * .8,
+          radius: .4 + Math.random() * 1.2, phase: Math.random() * 6.28
+        }));
+        buildings = [];
+        for (let x = 0; x < width;) {
+          const w = 22 + Math.random() * 42;
+          buildings.push({ x, w, h: 35 + Math.random() * Math.min(105, height * .14) });
+          x += w - 2;
+        }
+      }
+
+      function launch(targetX = width * (.15 + Math.random() * .7), targetY = height * (.11 + Math.random() * .36)) {
+        const startX = targetX + (Math.random() - .5) * width * .42;
+        const frames = 33 + Math.random() * 16;
+        rockets.push({
+          x: startX, y: height + 10, px: startX, py: height + 10,
+          vx: (targetX - startX) / frames, vy: (targetY - height - 10) / frames,
+          tx: targetX, ty: targetY, color: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+
+      function explode(x, y, color) {
+        const count = width < 500 ? 84 : 110;
+        for (let i = 0; i < count; i++) {
+          const angle = i / count * Math.PI * 2 + (Math.random() - .5) * .09;
+          const speed = (1.5 + Math.random() * 3.2) * (i % 5 === 0 ? 1.2 : 1);
+          const life = 48 + Math.random() * 34;
+          sparks.push({
+            x, y, px: x, py: y,
+            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            life, maxLife: life, color: i % 7 === 0 ? '#fff9df' : color,
+            radius: i % 6 === 0 ? 2.7 : 1.9
+          });
+        }
+        if (sparks.length > 650) sparks.splice(0, sparks.length - 650);
+      }
+
+      function paintBackground(now) {
+        ctx.fillStyle = '#080f1c';
+        ctx.fillRect(0, 0, width, height);
+        const glow = ctx.createRadialGradient(width * .5, height * .45, 20, width * .5, height * .45, width * .8);
+        glow.addColorStop(0, '#15263b');
+        glow.addColorStop(1, 'rgba(8, 15, 28, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, width, height);
+        for (const star of stars) {
+          ctx.globalAlpha = .25 + .4 * (1 + Math.sin(now * .0014 + star.phase)) / 2;
+          ctx.fillStyle = '#fff1d3';
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#0a1925';
+        for (const building of buildings) {
+          ctx.fillRect(building.x, height - building.h, building.w, building.h);
+          ctx.fillStyle = 'rgba(247, 204, 129, .25)';
+          for (let y = height - building.h + 12; y < height - 9; y += 15) {
+            for (let x = building.x + 8; x < building.x + building.w - 4; x += 13) {
+              if ((Math.floor(x * 3 + y * 7) % 5) === 0) ctx.fillRect(x, y, 3, 4);
+            }
+          }
+          ctx.fillStyle = '#0a1925';
+        }
+      }
+
+      function frame(now) {
+        const step = Math.min(2, Math.max(.5, (now - previousFrame) / 16.67));
+        previousFrame = now;
+        paintBackground(now);
+        if (!document.hidden && now >= nextLaunch) {
+          if (now < showUntil) {
+            launch();
+            nextLaunch = now + 350 + Math.random() * 220;
+          } else if (!reducedMotion) {
+            launch();
+            nextLaunch = now + 1700 + Math.random() * 850;
+          }
+        }
+        for (let i = rockets.length - 1; i >= 0; i--) {
+          const r = rockets[i];
+          r.px = r.x; r.py = r.y;
+          r.x += r.vx * step; r.y += r.vy * step;
+          ctx.strokeStyle = r.color;
+          ctx.lineWidth = 2.3;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = r.color;
+          ctx.beginPath(); ctx.moveTo(r.px, r.py + 9); ctx.lineTo(r.x, r.y); ctx.stroke();
+          if (r.y <= r.ty) {
+            explode(r.x, r.y, r.color);
+            rockets.splice(i, 1);
+          }
+        }
+        for (let i = sparks.length - 1; i >= 0; i--) {
+          const p = sparks[i];
+          p.px = p.x; p.py = p.y;
+          p.x += p.vx * step; p.y += p.vy * step;
+          p.vx *= Math.pow(.982, step); p.vy = p.vy * Math.pow(.982, step) + .045 * step;
+          p.life -= step;
+          if (p.life <= 0) { sparks.splice(i, 1); continue; }
+          ctx.globalAlpha = Math.min(1, p.life / Math.min(20, p.maxLife));
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = p.radius;
+          ctx.shadowBlur = 19;
+          ctx.shadowColor = p.color;
+          ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+        requestAnimationFrame(frame);
+      }
+
+      replay.addEventListener('click', () => {
+        showUntil = performance.now() + 7000;
+        nextLaunch = 0;
+        explode(width * .36, height * .24, colors[Math.floor(Math.random() * colors.length)]);
+        explode(width * .67, height * .3, colors[Math.floor(Math.random() * colors.length)]);
+        for (let i = 0; i < 3; i++) setTimeout(() => launch(), i * 180);
+      });
+      window.addEventListener('pointerdown', event => {
+        if (event.target === replay) return;
+        launch(Math.max(20, Math.min(width - 20, event.clientX)),
+               Math.max(height * .08, Math.min(height * .7, event.clientY)));
+      }, { passive: true });
+      window.addEventListener('resize', resize);
+      resize();
+      if (!reducedMotion) explode(width * .5, height * .23, colors[0]);
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
